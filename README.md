@@ -17,7 +17,7 @@ An example use case would be a web application that generates a scene-map of its
 
 A scene-map is a Clojure hash-map in a specific format that is recognized by the library. It is composed of vanilla Clojure data-structures. Here's a simple example:
 
-'''
+```
 {
  :camera {
           :position [0 0 7]
@@ -49,23 +49,23 @@ A scene-map is a Clojure hash-map in a specific format that is recognized by the
    }
   }
  }
-'''
+```
 
 This describes a simple green cube in the scene. Note that cube-vertices and cube-faces are vectors containing the vertices/indices corresponding to a 3D cube.
 
 You can pass this scene-map to the library with the following call:
 
-'''
+```
 (init-scene! simple-scene)
-'''
+```
 
 init-scene! returns a map containing the initialized state of the 3D scene, or the **scene-state**. Whenever you want to update the scene, you can alter the scene-map and pass it back in via **update-scene**:
 
-'''
+```
 (let [old-scene (:scene-map scene-state)
       new-scene (update-in [:models :cube :rotation] #(+ 0.005 %))]
       (update-scene! scene-state new-scene))
-'''
+```
 
 The WebGL scene would then be re-rendered with the updated cube. How many times to update per second is up to you, but it's recommended to update on the [window.requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame) of the browser. 
 
