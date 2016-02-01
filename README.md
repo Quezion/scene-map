@@ -71,7 +71,7 @@ The WebGL scene would then be re-rendered with the updated cube. How many times 
 
 # Examples
 
-See "simple_scene_example.html"
+See [src/scene_map/example_scenes.cljs](src/scene_map/example_scenes.cljs)
 
 # Project roadmap
 
