@@ -1,7 +1,7 @@
 # scene-map
 CLJS Library that renders 3D scenes from Clojure maps using THREE.js
 
-**Warning:** This is an early alpha version of the library. It is not recommended for usage, the API will change, and it's currently a proof of concept.
+**Warning:** This is an early alpha version of the library. It is not recommended for usage, the API will change, and it's currently a proof of concept. Due to dependencies, you will not yet be able to get this project running in your browser, but this will change in the coming weeks.
 
 # Premise
 
@@ -75,7 +75,9 @@ See "simple_scene_example.html"
 
 # Project roadmap
 
-This alpha is in an extremely rough state right now. You may initialize and update scenes, but adding or removing objects from the scene post initialization is not supported. The only operations that are supported are changing the properties of the models (position, rotation, scale, and visibility.)
+This alpha is in early alpha right now. You may initialize and update scenes, but adding or removing objects from the scene post initialization is not supported. The only operations that are supported are changing the properties of the models (position, rotation, scale, and visibility.)
+
+The API will change, and much of the internal code will be polished and refactored for simplicity.
 
 Support for changing the camera and scene parts of the map are next to be updated. Following that, support for textures on objects and sharing resources (vertices/indices/textures) on multiple objects in the scene.
 
