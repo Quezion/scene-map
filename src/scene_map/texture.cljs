@@ -36,7 +36,7 @@
     :normal
     :unknown})
 
-(defn ^:private three-texture
+(defn- three-texture
   "Given an array buffer containing texture data, the width and height of the texture, and its format
   Returns a THREE texture that can be used on THREE models."
   [width height format data]
@@ -44,7 +44,7 @@
   (-<> (THREE.DataTexture. data width height (get texture-formats-three-map format) (.-UnsignedByteType js/THREE))
        (jset/needs-update <> true)))
 
-(defn ^:private texmap-to-three
+(defn- texmap-to-three
   "Given a map representing a texture, creates a matching three-texture and returns it"
   [{:keys [width height format data] :as texmap}]
   {:pre [(contains-every? texmap :width :height :format :data)]}

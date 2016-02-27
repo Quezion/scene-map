@@ -3,10 +3,14 @@
   (:require
     [scene-map.core :as core]))
 
-(defn ^:private rotate-object
+(defn- rotate-object
   "Given a scene-map with a model that has the ID :cube, rotates it on the y axis by passed rotation (in radians)"
   [modelmap rotation]
   (update-in modelmap [:rotation 1] #(+ % rotation)))
+
+(defn- random-color-rgb-flat
+  "Returns a list of three RGB integers with values randomly 0 or 1"
+  [] (list (rand-int 2) (rand-int 2) (rand-int 2)))
 
 (def cube-vertices
   [-1 -1 -1  ; face vertices
@@ -59,7 +63,8 @@
                 :geometry   {:vertices {:type :clojure-coll
                                         :data cube-vertices}
                              :faces    {:type :clojure-coll
-                                        :data cube-faces}}
+                                        :data cube-faces}
+                             }
                 :material   {:type      :basic
                              :color-rgb color
                              :wireframe wireframe
@@ -76,31 +81,34 @@
             :fov      90}
    :renderer {
               :size [:screen-width :screen-height]
+              ;:auto-resize true
               :clear-color 0xd3d3d3}
    :models
    {
     :cube1 (cube-modelmap [0 2.5 0] [0 2.0 0] [255 0 0] [1 0.7 4] true)
     :cube2 (cube-modelmap [0 0 0] [0 1.5 0] [0 255 0] [1 0.7 4] true)
     :cube3 (cube-modelmap [0 -2.5 0] [0 1.0 0] [0 0 255] [1 0.7 4] true)
-    :cube4 (cube-modelmap [-7 0 0] [0 0 0] [255 0 255] [1 5 1] false)
-    :cube5 (cube-modelmap [7 0 0]  [0 0 0] [255 0 255] [1 5 1] false)
+    :cube4 (cube-modelmap [-7 0 0] [0 0 0] [255 0 255] [1 5 1] true)
+    :cube5 (cube-modelmap [7 0 0]  [0 0 0] [255 0 255] [1 5 1] true)
     :cube6 (cube-modelmap [0 -5.2 0] [0 0 0] [255 255 255] [8 0.2 1] false)
-    :cube7 (cube-modelmap [0 0 0] [0 0 0]  [255 255 0] [0.05 9 0.05] false)
+    :cube7 (cube-modelmap [0 -1.125 0] [0 0 0]  [255 255 0] [0.05 5.95 0.05] false)
+    :cube8 (cube-modelmap [0 0 0] [0 0 0]  [255 255 0] [6 0.05 0.05] false)
     }
    })
 
 (defn simple-scene-test
   "Renders the simple scene and rotates three of the cubes."
   []
-  (let [scene-state   (core/init-scene-new! simple-scene)
+  (let [scene-state   (core/init-scene! simple-scene)
         scene-state-atom (atom scene-state) ]
     (letfn [(render []
               (let [old-state (deref scene-state-atom)
                     old-scene (:scene-map old-state)
-                    new-scene-map (-<> (update-in old-scene [:models :cube1] #(rotate-object % 0.007))
-                                       (update-in <>        [:models :cube2] #(rotate-object % -0.009))
-                                       (update-in <>        [:models :cube3] #(rotate-object % 0.008)))
-                    new-state (core/update-scene! old-state new-scene-map)]
+                    new-scene (-<> (update-in old-scene [:models :cube1] #(rotate-object % 0.007))
+                                   (update-in <>        [:models :cube2] #(rotate-object % -0.009))
+                                   (update-in <>        [:models :cube3] #(rotate-object % 0.008))
+                                   (update-in <>        [:models :cube6 :meshes :body :material :color-rgb] random-color-rgb-flat))
+                    new-state (core/update-scene! old-state new-scene)]
                 (reset! scene-state-atom new-state)))
             (loop []
               (.requestAnimationFrame js/window loop)

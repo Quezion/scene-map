@@ -7,7 +7,7 @@
     [scene-map.mesh :refer [meshmap-to-three]]
     ))
 
-(defprotocol ^:export protocol
+(defprotocol protocol
   "Wrapping THREE.js Object3D properties with convenience functions"
   (position [object position] "The position of the object in the scene (vec3)")
   (rotation [object rotation] "The rotation of the object in the scene (vec3)")
@@ -20,19 +20,23 @@
   (visible  [object bool]     (jset/visible  object bool))
   (scale    [object scale]    (jset/scale   object scale)))
 
-(def ^:export keyword-setters
+(def keyword-setters
   "Maps keywords to the appropriate jset function. Useful for THREE constructors."
   {:position #(position %1 %2)
    :rotation #(rotation %1 %2)
    :visible  #(visible  %1 %2)
    :scale    #(scale    %1 %2)})
 
-(defn ^:private object3d-constructor
+(def keyword-properties
+  "A set of the possible keywords that can be set on an Object3D in the scene-map"
+  (into #{} (keys keyword-setters)))
+
+(defn- constructor
   "Constructs a default THREE Object3d and returns it."
   [] (THREE.Object3D.))
 
-(defn ^:private object3d-applicator
-  "Given a THREE Object3D and keyword/values passed as variadic args, sets the kvs on the Object3D.
+(defn- applicator
+  "Given a THREE Object3D and keyword/values as variadic args, sets the kvs on the Object3D.
   See keyword-setters for possible properties."
   [three-object3d & kvs]
   (let [props-kv    (partition 2 kvs)
@@ -42,14 +46,19 @@
     (dorun (cljs.core/map apply-props props-kv))
     three-object3d))
 
-
-(defn ^:private modelmap-to-three
+(defn modelmap-to-three
   "Given a model map (stored under a scene's :models key), instantiates a corresponding THREE Object3D."
   [{:keys [meshes] :as modelmap}]
-  (let [object-3d      (object3d-constructor)
+  (let [object-3d      (constructor)
         three-meshmaps (into {} (for [[k v] meshes] [k (meshmap-to-three v)]))
         three-meshes   (vals three-meshmaps)]
-    (dorun (map #(.add object-3d %) three-meshes))
-    (mapply object3d-applicator object-3d (dissoc modelmap :meshes))
-    object-3d))
 
+    (dorun (map #(.add object-3d %) three-meshes))
+    (mapply applicator object-3d (dissoc modelmap :meshes))
+    {:three-object object-3d :meshes three-meshmaps}))
+
+(defn valid-update-keywords
+  "Given a map containing keyword properties representing an object3d, returns a new map containing only
+  the valid keyword properties that can be set on an initialized object3d"
+  [model-updates]
+  (select-keys model-updates keyword-properties))

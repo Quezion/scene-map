@@ -6,7 +6,7 @@
     [util.coll :refer [into-js-array]]
     ))
 
-(defn ^:private three-geometry-old
+(defn three-geometry-old
   "Given a set of vertices and indices, creates a matching THREE.js geometry"
   [vertices faces]
   (let [geometry    (THREE.Geometry.)
@@ -17,25 +17,25 @@
     (.computeFaceNormals geometry)
     geometry))
 
-(defn ^:private seq-to-three-face3
+(defn seq-to-three-face3
   "Given a seq that returns a seq of three elements per take,
   returns a JavaScript array of corresponding THREE vector3s"
   [seq]
   (into-js-array (map #(THREE.Face3. (nth % 0) (nth % 1) (nth % 2)) seq)))
 
-(defn ^:private seq-to-three-vector3
+(defn seq-to-three-vector3
   "Given a seq that returns a seq of three elements per take,
   returns a JavaScript array of corresponding THREE vector3s"
   [seq]
   (into-js-array (map #(THREE.Vector3. (nth % 0) (nth % 1) (nth % 2)) seq)))
 
-(defn ^:private seq-to-three-vector2
+(defn seq-to-three-vector2
   "Given a seq that returns a seq of two elements per take
   returns a JavaScript array of corresponding THREE vector3s"
   [seq]
   (into-js-array (map #(THREE.Vector2. (first %) (second %)) seq)))
 
-(defn ^:private vertmap-to-seq
+(defn- vertmap-to-seq
   "Given a map representing the vertices, handles the data type and returns a seq that returns
   a three element collection per take"
   [{:keys [type data] :as vertmap}]
@@ -43,7 +43,7 @@
   ; Note that type-handlers returns a partition function that works on that collection type
   ((type collections/type-handlers) data 3))
 
-(defn ^:private facemap-to-seq
+(defn- facemap-to-seq
   "Given a map representing the face indices, handles the data type and returns a seq that returns
   a three element collection per take"
   [{:keys [type data] :as vertmap}]
@@ -51,7 +51,7 @@
   ; Note that type-handlers returns a partition function that works on that collection type
   ((type collections/type-handlers) data 3))
 
-(defn ^:export three-geometry
+(defn three-geometry
   "Constructs and returns a THREE geometry. If a JS array containing Vector3 objects is supplied for the
   vertices and faces, they will be set on the Geometry."
   ([] (THREE.Geometry))
@@ -60,7 +60,7 @@
         (-!<> (aset <> "vertices" vertices-js-array))
         (-!<> (aset <> "faces"   faces-js-array)))))
 
-(defn ^:private geomap-to-three
+(defn- geomap-to-three
   "Given a geometry-map, creates a matching THREE geometry object"
   [{:keys [vertices faces] :as geomap}]
   ; Handle keys :vertices, :indices

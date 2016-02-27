@@ -5,7 +5,7 @@
     [scene-map.jset :as jset]
     ))
 
-(defn ^:private sprite
+(defn sprite
   "Given a THREE sprite material object, constructs a sprite object."
   [sprite-material]
   (-<> (THREE.Sprite. sprite-material)

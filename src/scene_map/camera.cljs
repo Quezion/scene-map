@@ -4,7 +4,7 @@
     [THREE]  ; WebGL rendering library
   ))
 
-(defn ^:export set-camera-position
+(defn set-camera-position
   "Sets a THREE.js camera's position given a seq of three elements x/y/z. Returns the camera object."
   [camera [x y z :as position]]
   (-<> (.-position camera)
@@ -12,7 +12,7 @@
        (-!<> .-y (set! <> y))
        (-!<> .-z (set! <> z))) camera)
 
-(defn ^:export set-camera-rotation
+(defn set-camera-rotation
   "Sets a THREE.js camera's rotation given a seq of three elements x/y/z in radians. Returns the camera object."
   [camera [x y z :as rotation]]
   (-<> (.-rotation camera)
@@ -20,7 +20,7 @@
        (-!<> .-y (set! <> y))
        (-!<> .-z (set! <> z))) camera)
 
-(defn ^:export three-camera
+(defn three-camera
   "Creates a THREE.js camera from a seq of x,y,z for position and rotation (in radians) and the FOV, creates a THREE.js camera"
   [position rotation fov]
   (-<> (THREE.PerspectiveCamera. fov (/ (.-innerWidth js/window)
@@ -28,7 +28,7 @@
        (set-camera-position <> position)
        (set-camera-rotation <> rotation)))
 
-(defn ^:export camera-from-meshes
+(defn camera-from-meshes
   "Given a collection of THREE.js meshes, creates a camera that is guaranteed to view it (uses bounding sphere)."
   [meshes]
   (let [calculate-bounding-sphere #(.computeBoundingSphere (.-geometry %))
