@@ -79,10 +79,9 @@
             :position [0 0 7]
             :rotation [0 0 0]
             :fov      90}
-   :renderer {
-              :size [:screen-width :screen-height]
-              ;:auto-resize true
-              :clear-color 0xd3d3d3}
+   :renderer {:size [:screen-width :screen-height]
+              :clear-color 0xd3d3d3
+              :auto-resize? true}
    :models
    {
     :cube1 (cube-modelmap [0 2.5 0] [0 2.0 0] [255 0 0] [1 0.7 4] true)
@@ -107,14 +106,13 @@
                     new-scene (-<> (update-in old-scene [:models :cube1] #(rotate-object % 0.007))
                                    (update-in <>        [:models :cube2] #(rotate-object % -0.009))
                                    (update-in <>        [:models :cube3] #(rotate-object % 0.008))
-                                   (update-in <>        [:models :cube6 :meshes :body :material :color-rgb] random-color-rgb-flat))
+                                   (update-in <>        [:models :cube6 :meshes :body :material :color-rgb] #(if (= (rand-int 15) 14) (random-color-rgb-flat) %)))
                     new-state (core/update-scene! old-state new-scene)]
                 (reset! scene-state-atom new-state)))
             (loop []
               (.requestAnimationFrame js/window loop)
               (render))]
       (loop))))
-
 
 (def medium-scene
   {

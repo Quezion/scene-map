@@ -11,6 +11,7 @@
     [scene-map.jget      :as    jget]
     [scene-map.mesh      :as    mesh]
     [scene-map.object-3d :as    object3d]
+    [scene-map.canvas-resizer :as canvas-resizer]
     [scene-map.diff      :as    diff] ; utility functions to diff old scene-map against updated ones
     [util.coll :refer [intersection-keys mapply]]
     ))
@@ -28,7 +29,7 @@
 
     (letfn [(render []
               (dorun (map rotate meshes))
-              (.render (:three renderer) three-scene camera))
+              (.render renderer three-scene camera))
             (loop []
               (.requestAnimationFrame js/window loop)
               (render))]
@@ -36,14 +37,16 @@
 
 ; TODO: all arguments need to be processed for key resource-id and replaced with the corresponding resource if found
 ;       Textures should be initialized into THREE objects so they are shared among all referencing objects
-(defn state-map
+(defn initialize-state-map
   "Given the initialized objects and the passed in scene-map, constructs the state-map of the scene."
-  [scene-map three-scene three-camera renderer-state three-objectmap]
+  [scene-map three-scene three-camera three-renderer three-objectmap resize-callback]
   {:scene-map        scene-map
    :three-scene      three-scene
    :three-camera     three-camera
-   :renderer-state   renderer-state
-   :three-objectmap  three-objectmap})
+   :three-renderer   three-renderer
+   :three-objectmap  three-objectmap
+   :resize-callback  resize-callback})
+
 
 (defn three-object3ds-from-objectmaps
   [three-objectmaps]
@@ -55,39 +58,27 @@
   Returns a map of state about the initialized scene, including the passed in scene under the :scene key."
   [{:keys [camera renderer models] :as scene-map}]
   ; Start with the :meshes key
-  (let [renderer-state   (rendmap-to-three renderer)
+  (let [three-renderer   (rendmap-to-three renderer)
         ; TODO: namespace for THREE.Scene functions
         three-scene      (THREE.Scene.)
         three-objectmaps (into {} (for [[k v] models] [k (object3d/modelmap-to-three v)]))
         three-objects3ds (three-object3ds-from-objectmaps three-objectmaps)
-        three-camera     (three-camera (:position camera) (:rotation camera) (:fov camera))]
-    (.appendChild (.-body js/document) (.-domElement (:three renderer-state)))
+        three-camera     (three-camera (:position camera) (:rotation camera) (:fov camera))
+        resize-callback  (canvas-resizer/process-autoresize! [0 0] (:size renderer) false (:auto-resize? renderer) nil three-renderer three-camera)
+        ]
+    (.appendChild (.-body js/document) (.-domElement three-renderer))
     (dorun (map #(.add three-scene %) three-objects3ds))
 
-    (renderer/render (:three renderer-state) three-scene three-camera)
-    (state-map scene-map three-scene three-camera renderer-state three-objectmaps)))
-
-(def model-updates {:cube3 {:meshes {:body {:material {:color-rgb '(1 15 164)}}}, :rotation [0 2.336000000000001 0]},
-                    :cube2 {:rotation [0 -0.002999999999995071 0]},
-                    :cube1 {:meshes {:body {:material {:color-rgb '(209 20 206)}}}, :rotation [0 3.1690000000000196 0]}})
-(def three-objects {:cube1 {:three-object "JS Object", :meshes {:body "JS Object"}},
-                    :cube2 {:three-object "JS Object", :meshes {:body "JS Object"}},
-                    :cube3 {:three-object "JS Object", :meshes {:body "JS Object"}},
-                    :cube4 {:three-object "JS Object", :meshes {:body "JS Object"}},
-                    :cube5 {:three-object "JS Object", :meshes {:body "JS Object"}}})
+    (renderer/render three-renderer three-scene three-camera)
+    (initialize-state-map scene-map three-scene three-camera three-renderer three-objectmaps resize-callback)))
 
 (defn- update-three-from-meshmap
   [mesh-updates three-mesh]
-  ; There are no dynamically updateable properties on a mesh supported right now. Update material.
-  (let [three-objects (map #() three-mesh)]) ; use keys to get both three material object and meshmap
-
-  ;(print "mesh-updates = " mesh-updates)
-  ;(print "three-mesh-map = " three-mesh)
-  ;(print (mesh/get-material three-mesh))
+  ; There are no dynamically updateable properties on a mesh supported right now. Update material and ignores meshes.
+  ;(let [three-objects (map #() three-mesh)]) ; use keys to get both three material object and meshmap
 
   ; TODO: check there's actually a material key for this mesh?
-  (mapply material/applicator (mesh/get-material three-mesh) (material/valid-update-keywords (:material mesh-updates)))
-  )
+  (mapply material/applicator (mesh/get-material three-mesh) (material/valid-update-keywords (:material mesh-updates))))
 
 (defn- update-meshes
   [mesh-updates three-mesh-map]
@@ -126,15 +117,17 @@
 (defn update-scene!
   "Given the state of an initialized scene map and an updated scene,
   updates the scene's objects and renders it on the DOM."
-  [{:keys [three-objectmap three-camera three-scene renderer-state] :as scene-state} new-scene-map]
-  (let [diffed-scene (diff/alterations (:scene-map scene-state) new-scene-map)
-        updates      (:updates diffed-scene)
-
-        ]
-    
-    ;(add-three three-objectmap (:additions diffed-scene-state))
+  [{:keys [scene-map three-objectmap three-camera three-scene three-renderer resize-callback] :as scene-state} new-scene-map]
+  (let [diffed-scene    (diff/alterations scene-map new-scene-map)
+        updates         (:updates diffed-scene)
+        new-resize-callback (canvas-resizer/process-autoresize! (:size (:renderer scene-map)) (:size (:renderer new-scene-map))
+                                                            (:auto-resize? (:renderer scene-map)) (:auto-resize? (:renderer new-scene-map))
+                                                            resize-callback three-renderer three-camera)]
+    ;(add-three three-objectmap (:additions diffed-scene-state));
     ;(remove-three three-objectmap (:removals diffed-scene-state)
 
     (if (some? updates) (update-three three-objectmap updates))
-    (renderer/render (:three renderer-state) three-scene three-camera)
-    (assoc-in scene-state [:scene-map] new-scene-map)))
+    (renderer/render three-renderer three-scene three-camera)
+
+    ; TODO: should actually be taken three-scene, three-renderer, etc objects from the new maps returned by the update/add/remove functions
+    (initialize-state-map new-scene-map three-scene three-camera three-renderer three-objectmap new-resize-callback)))

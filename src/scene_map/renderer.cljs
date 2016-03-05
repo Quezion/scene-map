@@ -33,16 +33,18 @@
    :size            #(size %1 %2)})
 
 (defn- process-size-keyword
-  "Given a keyword size, processes it into a static value."
+  "Given a keyword width or height, processes keyword into a callback that always returns the width or height."
   [keyword]
   {:pre [(contains? renderer-size-keyword-handlers keyword)]}
-  ((keyword renderer-size-keyword-handlers)))
+  (keyword renderer-size-keyword-handlers))
 
 (defn- process-size
   "Given the size of a renderer, processes out special keywords and replaces them with corresponding contextual values.
   Returns the numerical size as a two element sequence."
   ([width height] (process-size (list width height)))
-  ([size] (map #(if (keyword? %) (process-size-keyword %) %) size)))
+  ([size] (map #(if (keyword? %)
+                 ((process-size-keyword %)) %)                 ; note the double invocation here. this is to process a size callback into a static value
+                 size)))
 
 (defn- constructor
   "Constructs a default THREE WebGLRenderer and returns it."
@@ -62,8 +64,8 @@
     three-renderer))
 
 (defn rendmap-to-three
+  "Given a map representing a renderer, constructrs the corresponding renderer and returns it."
   [rendmap]
   {:pre [(contains? rendmap :size)]}
   (-<> (constructor (:size rendmap))
-       (applicator <> (dissoc rendmap :size))
-       (hash-map :three <>)))
+       (applicator <> (dissoc rendmap :size :auto-resize?))))
