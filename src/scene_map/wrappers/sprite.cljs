@@ -1,4 +1,4 @@
-(ns scene-map.sprite
+(ns scene-map.wrappers.sprite
   (:require-macros [swiss.arrows :refer [-<> -!<>]]) ; diamond threading macro
   (:require
     [THREE]  ; WebGL rendering library

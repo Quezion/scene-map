@@ -1,10 +1,10 @@
-(ns scene-map.material
+(ns scene-map.wrappers.material
   (:refer-clojure :exclude [map])
   (:require-macros [swiss.arrows :refer [-<> -!<>]]) ; diamond threading macros
   (:require
     [THREE] ; WebGL rendering library
     [scene-map.jset :as jset]
-    [util.coll :refer [mapply]]
+    [util.coll :refer [mapply apply-kv-map]]
     ))
 
 (defprotocol protocol
@@ -24,7 +24,7 @@
                  ([object h s l] (jset/color-hsl object h s l)))
   (map        [object mapped] (jset/map object mapped)))
 
-(def keyword-setters
+(def applicables
   "Maps keywords to the appropriate jset function. Useful for THREE constructors."
   {:color-rgb     #(color-rgb %1 %2)
    :color-hsl     #(color-hsl %1 %2)
@@ -34,20 +34,25 @@
 
 (def keyword-properties
   "A set of the possible keywords that can be set on a Mesh in the scene-map"
-  (into #{} (keys keyword-setters)))
+  (into #{} (keys applicables)))
 
 (defn- basic-material-constructor
   "Constructs a default THREE Basic Material and returns it."
   [] (THREE.MeshBasicMaterial.))
 
-(defn applicator
+; TODO: uncomment and test. since it uses a reduce instead of a dorun map, could not work
+(comment (defn apply!
+  "Applies one or more kvs to a material3. The kvs should be passed as variadic arguments."
+  (partial apply-kv-map applicables)))
+
+(defn apply!
   "Given a THREE Material and keyword/values as variadic args, sets the kvs on the material.
   See keyword-setters for possible properties."
   [three-material & kvs]
   (let [props-kv    (partition 2 kvs)
         apply-props (fn [[k v] props]
-                      (if-not (contains? keyword-setters k) (throw (js/Error. (str "Invalid keyword-property :" (name k) " specified in scene materials"))))
-                      (apply (k keyword-setters) (list three-material v)))]
+                      (if-not (contains? applicables k) (throw (js/Error. (str "Invalid keyword-property :" (name k) " specified in scene materials"))))
+                      (apply (k applicables) (list three-material v)))]
     (dorun (cljs.core/map apply-props props-kv))
     three-material))
 
@@ -62,7 +67,7 @@
 (defn three-basic-material
   "Given a javascript object with material properties, returns a basic mesh material."
   [& kvs]
-  (apply applicator (basic-material-constructor) kvs))
+  (apply apply! (basic-material-constructor) kvs))
 
 (def material-types
   "A set of material formats that may be passed to make-three-texture.

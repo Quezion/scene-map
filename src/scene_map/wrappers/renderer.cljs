@@ -1,4 +1,4 @@
-(ns scene-map.renderer
+(ns scene-map.wrappers.renderer
   (:require-macros [swiss.arrows :refer [-<> -!<>]]) ; diamond threading macros
   (:require
     [THREE] ; WebGL rendering library
@@ -46,26 +46,26 @@
                  ((process-size-keyword %)) %)                 ; note the double invocation here. this is to process a size callback into a static value
                  size)))
 
-(defn- constructor
+(defn- costruct
   "Constructs a default THREE WebGLRenderer and returns it."
   [size-wh]
   (-<> (THREE.WebGLRenderer.)
        (size <> (process-size size-wh))))
 
-(defn- applicator
+(defn- apply!
   "Given a THREE WebGLRenderer and keyword/values as variadic args, sets the kvs on the renderer.
   See keyword-setters for possible properties."
-  [three-renderer & kvs]
+  [renderer3 & kvs]
   (let [props-kv    (partition 2 kvs)
         apply-props (fn [[k v] props]
                       (if-not (contains? keyword-setters k) (throw (js/Error. (str "Invalid keyword-property :" (name k) " specified in scene renderer."))))
-                      (apply (k keyword-setters) (list three-renderer v)))]
+                      (apply (k keyword-setters) (list renderer3 v)))]
     (dorun (cljs.core/map apply-props props-kv))
-    three-renderer))
+    renderer3))
 
 (defn rendmap-to-three
   "Given a map representing a renderer, constructrs the corresponding renderer and returns it."
   [rendmap]
   {:pre [(contains? rendmap :size)]}
-  (-<> (constructor (:size rendmap))
-       (applicator <> (dissoc rendmap :size :auto-resize?))))
+  (-<> (costruct (:size rendmap))
+       (apply! <> (dissoc rendmap :size :auto-resize?))))

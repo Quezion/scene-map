@@ -1,10 +1,10 @@
-(ns scene-map.object-3d
+(ns scene-map.wrappers.object-3d
   (:require-macros [swiss.arrows :refer [-<> -!<>]]) ; diamond threading macros
   (:require
     [THREE] ; WebGL rendering library
     [scene-map.jset :as jset]
-    [util.coll :refer [mapply]]
-    [scene-map.mesh :refer [meshmap-to-three]]
+    [scene-map.wrappers.mesh :refer [meshmap-to-three]]
+    [util.coll :refer [mapply map-dorun map-doall]]
     ))
 
 (defprotocol protocol
@@ -35,7 +35,7 @@
   "Constructs a default THREE Object3d and returns it."
   [] (THREE.Object3D.))
 
-(defn- applicator
+(defn- apply!
   "Given a THREE Object3D and keyword/values as variadic args, sets the kvs on the Object3D.
   See keyword-setters for possible properties."
   [three-object3d & kvs]
@@ -43,7 +43,7 @@
         apply-props (fn [[k v] props]
                       (if-not (contains? keyword-setters k) (throw (js/Error. (str "Invalid keyword-property :" (name k) " specified in scene model."))))
                       (apply (k keyword-setters) (list three-object3d v)))]
-    (dorun (cljs.core/map apply-props props-kv))
+    (map-dorun apply-props props-kv)
     three-object3d))
 
 (defn modelmap-to-three
@@ -53,8 +53,8 @@
         three-meshmaps (into {} (for [[k v] meshes] [k (meshmap-to-three v)]))
         three-meshes   (vals three-meshmaps)]
 
-    (dorun (map #(.add object-3d %) three-meshes))
-    (mapply applicator object-3d (dissoc modelmap :meshes))
+    (map-dorun #(.add object-3d %) three-meshes)
+    (mapply apply! object-3d (dissoc modelmap :meshes))
     {:three-object object-3d :meshes three-meshmaps}))
 
 (defn valid-update-keywords

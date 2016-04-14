@@ -1,7 +1,8 @@
-(ns scene-map.camera
+(ns scene-map.wrappers.camera
   (:require-macros [swiss.arrows :refer [-<> -!<>]]) ; diamond threading macro, non-updating diamond macro
   (:require
     [THREE]  ; WebGL rendering library
+    [util.coll :refer [map-dorun map-doall]]
   ))
 
 (defn set-camera-position
@@ -31,9 +32,7 @@
 (defn camera-from-meshes
   "Given a collection of THREE.js meshes, creates a camera that is guaranteed to view it (uses bounding sphere)."
   [meshes]
-  (let [calculate-bounding-sphere #(.computeBoundingSphere (.-geometry %))
-        bounding-sphere-radius    #(.-radius (.-boundingSphere (.-geometry %)))
-        ___                        (doall (map calculate-bounding-sphere meshes))
-        radius                     (-<> (map bounding-sphere-radius meshes)
+  (map-doall #(.computeBoundingSphere (.-geometry %)) meshes)
+  (let [radius                     (-<> (map #(.-radius (.-boundingSphere (.-geometry %))) meshes)
                                         (apply max <>))]
     (three-camera (list 0 (* radius 0.7) (* radius 2.0)) '(0 0 0) 75)))

@@ -1,9 +1,9 @@
-(ns scene-map.mesh
+(ns scene-map.wrappers.mesh
   (:require-macros [swiss.arrows :refer [-<> -!<>]]) ; diamond threading macro, non-updating diamond macro
   (:require
     [THREE]  ; WebGL rendering library
-    [scene-map.material :refer [matmap-to-three]]
-    [scene-map.geometry :refer [geomap-to-three]]
+    [scene-map.wrappers.material :refer [matmap-to-three]]
+    [scene-map.elements.geometry :as geometry-element]
     ))
 
 (defprotocol Mesh
@@ -20,15 +20,15 @@
   (get-geometry [three-mesh] (aget three-mesh "geometry")))
 
 (defn three-mesh
-  "Given key values representing a mesh, returns a corresponding THREE mesh."
-  [three-geometry three-material]
-  (THREE.Mesh. three-geometry three-material))
+  "Returns a mesh3 from the passed geometry3 and material3"
+  [geometry3 material3]
+  (THREE.Mesh. geometry3 material3))
 
 (defn- meshmap-to-three
   "Given a mesh map (stored under a model's :meshes key), instantiates corresponding THREE mesh."
   [{:keys [material geometry] :as meshmap}]
   {:pre [(some? material) (some? geometry)]}
   (let [three-material (matmap-to-three material)
-        three-geometry (geomap-to-three geometry)]
+        three-geometry (geometry-element/realize geometry)]
     (three-mesh three-geometry three-material)))
 

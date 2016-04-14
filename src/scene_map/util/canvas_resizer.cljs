@@ -1,6 +1,6 @@
 (ns scene-map.canvas-resizer
   (:require
-  [scene-map.renderer :as renderer]
+  [scene-map.wrappers.renderer :as renderer]
   ))
 
 (defn resize-canvas
