@@ -1,7 +1,7 @@
-(defproject questy/scene_map "0.0.1"
+(defproject questy/threact "0.0.1"
             :clojurescript? true
             :description "ClojureScript WebGL Rendering"
-            :url "https://github.com/questy/scene_map"
+            :url "https://github.com/questy/threact"
             :license {:name "Eclipse Public License"
                       :url "http://www.eclipse.org/legal/epl-v10.html"}
             :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
