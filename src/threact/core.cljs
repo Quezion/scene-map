@@ -1,4 +1,5 @@
-(ns threact.core)
+(ns threact.core
+  (:require [cljs.spec :as spec]))
 
 (defn foo
   "I don't do a whole lot."
